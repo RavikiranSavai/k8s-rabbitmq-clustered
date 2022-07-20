@@ -1,53 +1,53 @@
-apiVersion: apps/v1
 # See the Prerequisites section of https://www.rabbitmq.com/cluster-formation.html#peer-discovery-k8s.
-kind: StatefulSet
-metadata:
-  name: rabbitmq
-spec:
-  serviceName: rabbitmq
-  replicas: 3
-  selector:
-    matchLabels:
-      app: rabbitmq
-  template:
-    metadata:
-      labels:
+apiVersion: apps/v1      # API version of k8s for `StatefulSet`
+kind: StatefulSet        # Type of resource that we are creating
+metadata:                # Holds metadata for this resource
+  name: rabbitmq         # Name of this resource
+spec:                    # Holds specification of this resource
+  serviceName: rabbitmq  # Name of service, required by statefulset
+  replicas: 3            # Responsible for maintaining replicas
+  selector:              # Selectors help us in finding these items
+    matchLabels:         # map of {key,value} pairs
+      app: rabbitmq      
+  template:              # Template holds the spec of the pod
+    metadata:            # Holds metadata for the pod
+      labels:            # Extra metadata goes inside labels.
         app: rabbitmq
     spec:
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 100
+      affinity:          # A set of rules used by the scheduler to determine where a pod can be placed.   
+        podAntiAffinity: # Allow you to specify rules about how pods should be placed relative to other pods
+          preferredDuringSchedulingIgnoredDuringExecution: # The scheduler tries to find a node that meets the rule. If a matching node is not available, the scheduler still schedules the Pod.
+          - weight: 100  # A weight between 1 and 100 for each instance of the
             podAffinityTerm:
               labelSelector:
-                matchExpressions:
+                matchExpressions: # A list of pod selector requirements.
                 - key: app
                   operator: In
                   values:
                   - rabbitmq
-              topologyKey: kubernetes.io/hostname
+              topologyKey: kubernetes.io/hostname # the key of node labels
       serviceAccountName: rabbitmq
       terminationGracePeriodSeconds: 10
-      nodeSelector:
+      nodeSelector: #add the nodeSelector field to your Pod specification
         # Use Linux nodes in a mixed OS kubernetes cluster.
         # Learn more at https://kubernetes.io/docs/reference/kubernetes-api/labels-annotations-taints/#kubernetes-io-os
         kubernetes.io/os: linux
-      containers:
-      - name: rabbitmq-k8s
-        image: rabbitmq:3.8
-        volumeMounts:
-          - name: config-volume
+      containers:               # list and configs of normal containers in the pod
+      - name: rabbitmq-k8s      # Name of the first container
+        image: rabbitmq:3.8     # Image that will be deployed in container
+        volumeMounts:           # The path where volume will be mounted.
+          - name: config-volume # Name given to this mount
             mountPath: /etc/rabbitmq
         # Learn more about what ports various protocols use
         # at https://www.rabbitmq.com/networking.html#ports
-        ports:
-          - name: http
-            protocol: TCP
-            containerPort: 15672
-          - name: amqp
-            protocol: TCP
-            containerPort: 5672
-        livenessProbe:
+        ports:                    # Port on which LoadBalancer will listen 
+          - name: http            # Name given to port 
+            protocol: TCP         # Protocol supported
+            containerPort: 15672  # Port number
+          - name: amqp            # Name given to port
+            protocol: TCP         # Protocol supported
+            containerPort: 5672   # Port number
+        livenessProbe:            # Indicates whether the Container is running. 
           exec:
             # This is just an example. There is no "one true health check" but rather
             # several rabbitmq-diagnostics commands that can be combined to form increasingly comprehensive
@@ -60,7 +60,7 @@ spec:
           # See https://www.rabbitmq.com/monitoring.html for monitoring frequency recommendations.
           periodSeconds: 60
           timeoutSeconds: 15
-        readinessProbe:
+        readinessProbe: # determine whether the application is ready to serve the requests.
           exec:
             # This is just an example. There is no "one true health check" but rather
             # several rabbitmq-diagnostics commands that can be combined to form increasingly comprehensive
@@ -72,8 +72,8 @@ spec:
           initialDelaySeconds: 20
           periodSeconds: 60
           timeoutSeconds: 10
-        imagePullPolicy: Always
-        env:
+        imagePullPolicy: Always  # Sets the policy that only pull image
+        env:                     # array of env vars with values are passed to image
           - name: MY_POD_NAME
             valueFrom:
               fieldRef:
@@ -99,7 +99,7 @@ spec:
           - name: RABBITMQ_DEFAULT_PASS
             value: "admin"
       volumes:
-        - name: config-volume
+        - name: config-volume  # Name of this resource
           configMap:
             name: rabbitmq-config
             items:

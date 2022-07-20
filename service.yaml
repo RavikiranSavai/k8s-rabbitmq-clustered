@@ -1,15 +1,15 @@
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: rabbitmq
+apiVersion: v1              # API version of k8s for `service`
+kind: Service               # Type of resource that we are creating
+metadata:                   # Holds metadata for this resource
+  labels:                   # Extra metadata goes inside labels.
+    app: rabbitmq 
   name: rabbitmq
 spec:
-  clusterIP: 'None'
-  ports:
-  - name: http-port
-    port: 15672
-    protocol: TCP
+  clusterIP: 'None'         # provides a load-balanced IP address.
+  ports:   
+  - name: http-port         # Ports that this pod will open
+    port: 15672             # Ports that this pod will open
+    protocol: TCP 
     targetPort: http
   - name: amqp-port
     port: 5672
@@ -19,13 +19,13 @@ spec:
     app: rabbitmq
   type: ClusterIP
 ---
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  labels:
+apiVersion: extensions/v1beta1 # API version of k8s for `StatefulSet`
+kind: Ingress                  # Type of resource that we are creating
+metadata:                      # Holds metadata for this resource
+  labels:                      # Extra metadata goes inside labels.
     app: rabbitmq
   name: rabbitmq
-spec:
+spec:                          # Specification of the Ingress
   rules:
   - host: <LB-URL>
     http:
